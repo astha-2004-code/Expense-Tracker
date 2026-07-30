@@ -1,5 +1,4 @@
-CREATE DATABASE IF NOT EXISTS expense_tracker;
-USE expense_tracker;
+-- Initialization of tables for Expense Tracker
 
 -- Users Table
 CREATE TABLE IF NOT EXISTS users (

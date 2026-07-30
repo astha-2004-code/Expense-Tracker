@@ -36,7 +36,14 @@ app.use((err, req, res, next) => {
     });
 });
 
+const db = require('./config/db');
+
 // Start Server
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+const startServer = async () => {
+    await db.initializeDatabase();
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+};
+
+startServer();
