@@ -1,86 +1,56 @@
-# Full-Stack Expense Tracker
+# Full-Stack Expense Tracker (React + Node.js)
 
-A modern, responsive, full-stack Expense Tracker application built with Node.js, Express.js, MySQL, and Vanilla JavaScript/CSS.
-
-## Features
-
-- **User Authentication:** Secure JWT-based login and registration with bcrypt password hashing.
-- **Dashboard:** Comprehensive overview with total income, expenses, and balance.
-- **Charts:** Visual representation of income vs expenses and category breakdowns using Chart.js.
-- **Transactions Management:** Add, edit, and delete income and expense transactions.
-- **Filtering & Sorting:** Filter transactions by type, category, date, and search by description. Sort by amount and date.
-- **Budgeting:** Set a monthly budget and receive warnings when expenses exceed it.
-- **Export:** Download transaction history as a CSV file.
-- **Modern UI:** Clean, responsive design with dark/light mode toggle.
+A modern, responsive, full-stack Expense Tracker application. The project is decoupled into a React frontend and a Node.js/Express backend.
 
 ## Technology Stack
 
-- **Backend:** Node.js, Express.js
-- **Database:** MySQL, `mysql2` driver
-- **Frontend:** HTML5, Vanilla CSS (Custom Design System), Vanilla JS
-- **Security:** `bcrypt`, `jsonwebtoken`
-- **Libraries:** Chart.js, Font Awesome, Google Fonts (Inter)
+- **Backend:** Node.js, Express.js, MySQL (in `backend/` folder)
+- **Frontend:** React, Vite, Chart.js (in `frontend/` folder)
 
 ## Getting Started
 
-### Prerequisites
+### 1. Database Setup
 
-- Node.js (v14+ recommended)
-- MySQL Server
+1. Ensure your MySQL server is running.
+2. Run the provided SQL script to create the database schema:
+   ```bash
+   mysql -u your_user -p < backend/database/init.sql
+   ```
 
-### Installation
+### 2. Backend Setup
 
-1. **Clone the repository or unzip the project folder.**
-
-2. **Install dependencies:**
+1. Navigate to the `backend` folder:
+   ```bash
+   cd backend
+   ```
+2. Configure Environment Variables:
+   Open `backend/.env` and ensure your database credentials are correct.
+3. Install dependencies and start the server:
    ```bash
    npm install
-   ```
-
-3. **Database Setup:**
-   - Ensure your MySQL server is running.
-   - Run the provided SQL script to create the database schema and default categories:
-     ```bash
-     mysql -u your_user -p < database/init.sql
-     ```
-   - Alternatively, you can copy the contents of `database/init.sql` and run it in your preferred MySQL client (e.g., MySQL Workbench, phpMyAdmin).
-
-4. **Environment Variables:**
-   - Open the `.env` file in the root directory.
-   - Update the database credentials to match your local setup:
-     ```env
-     PORT=3000
-     DB_HOST=localhost
-     DB_USER=root
-     DB_PASSWORD=your_mysql_password
-     DB_NAME=expense_tracker
-     JWT_SECRET=your_super_secret_jwt_key
-     JWT_EXPIRES_IN=24h
-     ```
-
-5. **Start the Application:**
-   ```bash
    npm start
    ```
-   Or for development mode (if you install nodemon):
+   The backend will run on `http://localhost:3000`.
+
+### 3. Frontend Setup
+
+1. Open a new terminal and navigate to the `frontend` folder:
    ```bash
-   npx nodemon server.js
+   cd frontend
    ```
+2. Install dependencies and start the dev server:
+   ```bash
+   npm install
+   npm run dev
+   ```
+3. Open your browser and navigate to the URL provided by Vite (usually `http://localhost:5173`).
 
-6. **Access the App:**
-   - Open your browser and navigate to `http://localhost:3000`.
+## Features
 
-## Project Structure
-
-- `/config` - Database connection configuration
-- `/controllers` - Request handlers for auth, categories, and transactions
-- `/database` - SQL initialization script
-- `/middleware` - Custom middleware (JWT auth protection)
-- `/models` - Database query abstractions (User, Category, Transaction)
-- `/public` - Static assets (CSS styles, Vanilla JS logic, images)
-- `/routes` - Express API routes definition
-- `/views` - HTML templates served by Express
-- `server.js` - Application entry point
-
-## License
-MIT
+- **User Authentication:** Secure JWT-based login and registration.
+- **Dashboard:** Comprehensive overview with total income, expenses, and balance.
+- **Charts:** Visual representation of income vs expenses and category breakdowns.
+- **Transactions Management:** Add, edit, and delete transactions.
+- **Filtering & Sorting:** Filter by type, category, date, and search by description.
+- **Budgeting:** Set a monthly budget and receive warnings.
+- **Export:** Download transaction history as a CSV file.
