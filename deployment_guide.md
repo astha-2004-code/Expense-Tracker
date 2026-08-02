@@ -8,10 +8,14 @@ This guide will walk you through deploying the Expense Tracker to production usi
 2. Click **Create Service** and select **MySQL**.
 3. Choose your preferred cloud provider and region, then select a service plan (e.g., Hobbyist).
 4. Give your service a name and click **Create Service**.
-5. Once the service is running, navigate to its **Overview** page to find your **Service URI** (this is your `DATABASE_URL`). It will look something like this:
-   `mysql://avnadmin:password@mysql-project.aivencloud.com:25060/defaultdb?ssl-mode=REQUIRED`
+5. Once the service is running, navigate to its **Overview** page to find your connection details:
+   - **Host**
+   - **Port**
+   - **User**
+   - **Password**
+   - **Database Name** (default is usually `defaultdb`)
 6. Open your local terminal or a MySQL client (like MySQL Workbench, DBeaver, or Aiven's integrated CLI) and execute the `backend/database/init.sql` script to create the necessary tables in your Aiven database.
-   - Example using CLI: `mysql -u avnadmin -p -h <host> -P 25060 defaultdb < backend/database/init.sql`
+   - Example using CLI: `mysql -h <host> -P <port> -u <user> -p <database_name> < backend/database/init.sql`
 
 ---
 
@@ -32,7 +36,11 @@ This guide will walk you through deploying the Expense Tracker to production usi
    | Key | Value (Example) |
    | :--- | :--- |
    | `NODE_ENV` | `production` |
-   | `DATABASE_URL` | *(The Service URI from Aiven, e.g. mysql://avnadmin:...)* |
+   | `DB_HOST` | *(from Aiven)* |
+   | `DB_PORT` | *(from Aiven, usually 25060)* |
+   | `DB_USER` | *(from Aiven)* |
+   | `DB_PASSWORD` | *(from Aiven)* |
+   | `DB_NAME` | *(from Aiven, usually defaultdb)* |
    | `JWT_SECRET` | *(a strong, random secret string)* |
    | `JWT_EXPIRES_IN` | `24h` |
    | `FRONTEND_URL` | *(leave blank for now, will update in Step 4)* |

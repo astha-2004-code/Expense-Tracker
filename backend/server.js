@@ -1,9 +1,8 @@
+require('dotenv').config({ path: __dirname + '/.env' });
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const path = require('path');
-require('dotenv').config();
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -42,7 +41,7 @@ const db = require('./config/db');
 const startServer = async () => {
     await db.initializeDatabase();
     app.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT}`);
+        console.log(`Server running on port ${PORT}`);
     });
 };
 
