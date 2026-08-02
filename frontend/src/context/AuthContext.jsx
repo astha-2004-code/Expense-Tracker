@@ -36,7 +36,8 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         localStorage.removeItem('user');
         localStorage.removeItem('token');
-        fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`).catch(() => {});
+        const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+        fetch(`${baseUrl}/api/auth/logout`).catch(() => {});
     }, []);
 
     const updateBudget = useCallback((budget) => {
@@ -57,7 +58,9 @@ export const AuthProvider = ({ children }) => {
         };
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}${endpoint}`, { ...options, headers });
+            const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+            const safeEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+            const response = await fetch(`${baseUrl}${safeEndpoint}`, { ...options, headers });
             const data = await response.json();
             
             if (!response.ok) {
