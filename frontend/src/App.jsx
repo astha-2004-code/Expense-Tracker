@@ -1,8 +1,11 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { CurrencyProvider } from './context/CurrencyContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
+import SavingsGoals from './pages/SavingsGoals';
+import RecurringTransactions from './pages/RecurringTransactions';
 
 const ProtectedRoute = ({ children }) => {
     const { user } = useAuth();
@@ -45,6 +48,16 @@ function AppRoutes() {
                         <Profile />
                     </ProtectedRoute>
                 } />
+                <Route path="/goals" element={
+                    <ProtectedRoute>
+                        <SavingsGoals />
+                    </ProtectedRoute>
+                } />
+                <Route path="/recurring" element={
+                    <ProtectedRoute>
+                        <RecurringTransactions />
+                    </ProtectedRoute>
+                } />
             </Routes>
         </>
     );
@@ -54,7 +67,9 @@ function App() {
     return (
         <AuthProvider>
             <Router>
-                <AppRoutes />
+                <CurrencyProvider>
+                    <AppRoutes />
+                </CurrencyProvider>
             </Router>
         </AuthProvider>
     );

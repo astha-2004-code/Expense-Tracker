@@ -81,7 +81,7 @@ exports.login = async (req, res, next) => {
         res.status(200).json({
             success: true,
             token,
-            user: { id: user.id, name: user.name, email: user.email, monthly_budget: user.monthly_budget }
+            user: { id: user.id, name: user.name, email: user.email, monthly_budget: user.monthly_budget, preferred_currency: user.preferred_currency }
         });
     } catch (err) {
         next(err);
@@ -115,6 +115,16 @@ exports.updateBudget = async (req, res, next) => {
         const { budget } = req.body;
         await User.updateBudget(req.user.id, budget);
         res.status(200).json({ success: true, message: 'Budget updated successfully' });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.updateCurrency = async (req, res, next) => {
+    try {
+        const { preferred_currency } = req.body;
+        await User.updateCurrency(req.user.id, preferred_currency);
+        res.status(200).json({ success: true, message: 'Currency updated successfully' });
     } catch (err) {
         next(err);
     }

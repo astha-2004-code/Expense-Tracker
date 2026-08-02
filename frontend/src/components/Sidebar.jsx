@@ -18,6 +18,16 @@ const Sidebar = () => {
                     </Link>
                 </li>
                 <li>
+                    <Link to="/recurring" className={location.pathname === '/recurring' ? 'active' : ''}>
+                        <i className="fas fa-sync-alt"></i> Recurring
+                    </Link>
+                </li>
+                <li>
+                    <Link to="/goals" className={location.pathname === '/goals' ? 'active' : ''}>
+                        <i className="fas fa-bullseye"></i> Savings Goals
+                    </Link>
+                </li>
+                <li>
                     <Link to="/profile" className={location.pathname === '/profile' ? 'active' : ''}>
                         <i className="fas fa-user"></i> Profile
                     </Link>

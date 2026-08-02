@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import Sidebar from '../components/Sidebar';
 import { useAuth } from '../context/AuthContext';
+import { useCurrency } from '../context/CurrencyContext';
 
 const Profile = () => {
     const { user, apiCall, showToast, updateBudget } = useAuth();
+    const { currency, changeCurrency } = useCurrency();
     
     const [profile, setProfile] = useState({ name: 'Loading...', email: 'Loading...', monthly_budget: 0 });
     const [budgetInput, setBudgetInput] = useState('');
@@ -94,11 +96,30 @@ const Profile = () => {
                         </div>
                     </div>
 
+                    <div className="card" style={{ flexDirection: 'column', alignItems: 'flex-start', borderLeft: '5px solid var(--success-color)' }}>
+                        <h3 style={{ marginBottom: '20px' }}>Preferences</h3>
+                        <div className="form-group" style={{ width: '100%' }}>
+                            <label>Preferred Currency</label>
+                            <select 
+                                className="form-control" 
+                                value={currency} 
+                                onChange={e => changeCurrency(e.target.value)}
+                            >
+                                <option value="INR">INR (₹) - Indian Rupee</option>
+                                <option value="USD">USD ($) - US Dollar</option>
+                                <option value="EUR">EUR (€) - Euro</option>
+                            </select>
+                            <small style={{ color: 'var(--text-secondary)', marginTop: '5px', display: 'block' }}>
+                                This will change the display currency across the dashboard.
+                            </small>
+                        </div>
+                    </div>
+
                     <div className="card" style={{ flexDirection: 'column', alignItems: 'flex-start', borderLeft: '5px solid var(--warning-color)' }}>
                         <h3 style={{ marginBottom: '20px' }}>Monthly Budget</h3>
                         <form onSubmit={handleBudgetSubmit} style={{ width: '100%' }}>
                             <div className="form-group">
-                                <label>Set Monthly Expense Budget (₹)</label>
+                                <label>Set Monthly Expense Budget ({currency})</label>
                                 <input 
                                     type="number" 
                                     className="form-control" 

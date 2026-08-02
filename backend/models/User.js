@@ -15,12 +15,17 @@ class User {
     }
 
     static async findById(id) {
-        const [rows] = await db.query('SELECT id, name, email, monthly_budget, created_at FROM users WHERE id = ?', [id]);
+        const [rows] = await db.query('SELECT id, name, email, monthly_budget, preferred_currency, created_at FROM users WHERE id = ?', [id]);
         return rows[0];
     }
 
     static async updateBudget(id, budget) {
         const [result] = await db.query('UPDATE users SET monthly_budget = ? WHERE id = ?', [budget, id]);
+        return result.affectedRows;
+    }
+    
+    static async updateCurrency(id, currency) {
+        const [result] = await db.query('UPDATE users SET preferred_currency = ? WHERE id = ?', [currency, id]);
         return result.affectedRows;
     }
     

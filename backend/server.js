@@ -37,11 +37,18 @@ app.use(cookieParser());
 const authRoutes = require('./routes/authRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
+const insightRoutes = require('./routes/insightRoutes');
+const goalRoutes = require('./routes/goalRoutes');
+const recurringRoutes = require('./routes/recurringRoutes');
+const { startScheduler } = require('./services/scheduler');
 
 // Use Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/insights', insightRoutes);
+app.use('/api/goals', goalRoutes);
+app.use('/api/recurring', recurringRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
@@ -58,6 +65,10 @@ const db = require('./config/db');
 // Start Server
 const startServer = async () => {
     await db.initializeDatabase();
+    
+    // Start recurring transaction background job
+    startScheduler();
+    
     app.listen(PORT, '0.0.0.0', () => {
         console.log(`Server running on port ${PORT}`);
     });

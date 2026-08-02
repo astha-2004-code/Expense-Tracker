@@ -4,11 +4,16 @@ import { useAuth } from '../context/AuthContext';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
 import { Doughnut, Bar } from 'react-chartjs-2';
 import { formatCurrency } from '../utils/formatCurrency';
+import { useCurrency } from '../context/CurrencyContext';
+import AIInsights from '../components/widgets/AIInsights';
+import TopGoals from '../components/widgets/TopGoals';
+import UpcomingRecurring from '../components/widgets/UpcomingRecurring';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
 const Dashboard = () => {
     const { user, apiCall, showToast } = useAuth();
+    const { currency, convert } = useCurrency();
     
     // State
     const [transactions, setTransactions] = useState([]);
@@ -64,7 +69,7 @@ const Dashboard = () => {
                 setExpenseBreakdown(statsRes.data.expenseBreakdown);
                 
                 if (user.monthly_budget > 0 && statsRes.data.summary.expense > user.monthly_budget) {
-                    showToast(`Warning: You exceeded your budget of ${formatCurrency(user.monthly_budget)}!`, 'warning');
+                    showToast(`Warning: You exceeded your budget of ${formatCurrency(convert(user.monthly_budget), currency)}!`, 'warning');
                 }
             }
         } catch (e) { console.error(e); }
@@ -141,7 +146,7 @@ const Dashboard = () => {
         try {
             const res = await apiCall(`/api/transactions${query}`);
             if (res && res.data) {
-                let csvContent = "data:text/csv;charset=utf-8,Date,Description,Category,Type,Amount (₹)\n";
+                let csvContent = `data:text/csv;charset=utf-8,Date,Description,Category,Type,Amount (${currency})\n`;
                 res.data.forEach(t => {
                     const row = [t.date.split('T')[0], `"${(t.description || '').replace(/"/g, '""')}"`, t.category_name, t.type, t.amount].join(",");
                     csvContent += row + "\n";
@@ -206,33 +211,39 @@ const Dashboard = () => {
                         <div className="card-icon"><i className="fas fa-arrow-up"></i></div>
                         <div className="card-info">
                             <h3>Total Income</h3>
-                            <div className="amount">{formatCurrency(summary.income)}</div>
+                            <div className="amount">{formatCurrency(convert(summary.income), currency)}</div>
                         </div>
                     </div>
                     <div className="card expense">
                         <div className="card-icon"><i className="fas fa-arrow-down"></i></div>
                         <div className="card-info">
                             <h3>Total Expense</h3>
-                            <div className="amount">{formatCurrency(summary.expense)}</div>
+                            <div className="amount">{formatCurrency(convert(summary.expense), currency)}</div>
                         </div>
                     </div>
                     <div className="card">
                         <div className="card-icon" style={{color: 'var(--primary-color)'}}><i className="fas fa-balance-scale"></i></div>
                         <div className="card-info">
                             <h3>Current Balance</h3>
-                            <div className="amount">{formatCurrency(summary.balance)}</div>
+                            <div className="amount">{formatCurrency(convert(summary.balance), currency)}</div>
                         </div>
                     </div>
+                </section>
+                
+                <section className="widgets-section" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+                    <AIInsights />
+                    <TopGoals />
+                    <UpcomingRecurring />
                 </section>
 
                 <section className="charts-section">
                     <div className="chart-container">
                         <h3>Income vs Expense</h3>
-                        <Doughnut data={doughnutData} options={{ responsive: true, plugins: { legend: { position: 'bottom', labels: { color: textColor } }, tooltip: { callbacks: { label: (context) => formatCurrency(context.raw) } } }, cutout: '70%' }} />
+                        <Doughnut data={doughnutData} options={{ responsive: true, plugins: { legend: { position: 'bottom', labels: { color: textColor } }, tooltip: { callbacks: { label: (context) => formatCurrency(context.raw, currency) } } }, cutout: '70%' }} />
                     </div>
                     <div className="chart-container">
                         <h3>Expense by Category</h3>
-                        <Bar data={barData} options={{ responsive: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => formatCurrency(context.raw) } } }, scales: { y: { ticks: { color: textColor, callback: (value) => formatCurrency(value) } }, x: { ticks: { color: textColor } } } }} />
+                        <Bar data={barData} options={{ responsive: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => formatCurrency(context.raw, currency) } } }, scales: { y: { ticks: { color: textColor, callback: (value) => formatCurrency(value, currency) } }, x: { ticks: { color: textColor } } } }} />
                     </div>
                 </section>
 
@@ -285,7 +296,7 @@ const Dashboard = () => {
                                             <td><i className={t.category_icon}></i> {t.category_name}</td>
                                             <td><span className={`type-badge ${t.type}`}>{t.type}</span></td>
                                             <td style={{color: t.type === 'income' ? 'var(--success-color)' : 'var(--text-primary)', fontWeight: 600}}>
-                                                {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
+                                                {t.type === 'income' ? '+' : '-'}{formatCurrency(convert(t.amount), currency)}
                                             </td>
                                             <td className="action-btns">
                                                 <button className="edit-btn" onClick={() => handleModalOpen(t)}><i className="fas fa-edit"></i></button>
@@ -323,7 +334,7 @@ const Dashboard = () => {
                                 </select>
                             </div>
                             <div className="form-group">
-                                <label>Amount (₹)</label>
+                                <label>Amount ({currency})</label>
                                 <input type="number" step="0.01" className="form-control" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} required />
                             </div>
                             <div className="form-group">
