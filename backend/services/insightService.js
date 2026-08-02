@@ -102,7 +102,9 @@ exports.generateRuleBasedInsights = async (userId) => {
         if (process.env.GEMINI_API_KEY) {
             try {
                 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                const MODEL_NAME = "gemini-3.5-flash";
+                console.log("Using Gemini Model:", MODEL_NAME);
+                const model = genAI.getGenerativeModel({ model: MODEL_NAME });
                 
                 // Prepare additional context
                 const goals = await Goal.findByUserId(userId) || [];
