@@ -53,6 +53,16 @@ class RecurringTransaction {
         const [result] = await db.query('DELETE FROM recurring_transactions WHERE id = ? AND user_id = ?', [id, userId]);
         return result.affectedRows;
     }
+
+    static async update(id, userId, categoryId, type, amount, description, frequency, nextExecution) {
+        const [result] = await db.query(
+            `UPDATE recurring_transactions 
+            SET category_id = ?, type = ?, amount = ?, description = ?, frequency = ?, next_execution = ?
+            WHERE id = ? AND user_id = ?`,
+            [categoryId, type, amount, description, frequency, nextExecution, id, userId]
+        );
+        return result.affectedRows;
+    }
 }
 
 module.exports = RecurringTransaction;

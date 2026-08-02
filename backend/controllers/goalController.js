@@ -41,6 +41,27 @@ exports.updateSavedAmount = async (req, res, next) => {
     }
 };
 
+exports.updateGoal = async (req, res, next) => {
+    try {
+        const { goal_name, target_amount, deadline, description } = req.body;
+        if (!goal_name || !target_amount) {
+            return res.status(400).json({ success: false, message: 'Please provide goal name and target amount' });
+        }
+        
+        const affectedRows = await Goal.update(
+            req.params.id, req.user.id, goal_name, target_amount, deadline, description
+        );
+        
+        if (affectedRows === 0) {
+            return res.status(404).json({ success: false, message: 'Goal not found or unauthorized' });
+        }
+        
+        res.status(200).json({ success: true, message: 'Goal updated successfully' });
+    } catch (err) {
+        next(err);
+    }
+};
+
 exports.deleteGoal = async (req, res, next) => {
     try {
         const affectedRows = await Goal.delete(req.params.id, req.user.id);

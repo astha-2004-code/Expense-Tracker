@@ -3,6 +3,17 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const path = require('path');
+
+console.log("Gemini Key Loaded:", !!process.env.GEMINI_API_KEY);
+if (process.env.GEMINI_API_KEY) {
+    console.log("Gemini Key starts with:", process.env.GEMINI_API_KEY.substring(0, 10));
+}
+
+if (!process.env.GEMINI_API_KEY) {
+    console.error("Missing GEMINI_API_KEY. Stopping server.");
+    process.exit(1);
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -51,11 +62,15 @@ app.use('/api/goals', goalRoutes);
 app.use('/api/recurring', recurringRoutes);
 
 // Error Handling Middleware
+app.use((req, res, next) => {
+    res.status(404).json({ success: false, message: 'API route not found' });
+});
+
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).json({
+    res.status(err.status || 500).json({
         success: false,
-        message: 'Something went wrong!',
+        message: err.message || 'Something went wrong!',
         error: process.env.NODE_ENV === 'development' ? err.message : {}
     });
 });

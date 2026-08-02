@@ -26,6 +26,14 @@ class Goal {
         const [result] = await db.query('DELETE FROM savings_goals WHERE id = ? AND user_id = ?', [id, userId]);
         return result.affectedRows;
     }
+
+    static async update(id, userId, goalName, targetAmount, deadline, description) {
+        const [result] = await db.query(
+            'UPDATE savings_goals SET goal_name = ?, target_amount = ?, deadline = ?, description = ? WHERE id = ? AND user_id = ?',
+            [goalName, targetAmount, deadline || null, description || '', id, userId]
+        );
+        return result.affectedRows;
+    }
 }
 
 module.exports = Goal;

@@ -1,5 +1,5 @@
 const express = require('express');
-const { getRecurringTransactions, createRecurringTransaction, toggleActive, deleteRecurringTransaction } = require('../controllers/recurringController');
+const { getRecurringTransactions, createRecurringTransaction, toggleActive, deleteRecurringTransaction, updateRecurringTransaction } = require('../controllers/recurringController');
 const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -11,6 +11,7 @@ router.route('/')
     .post(createRecurringTransaction);
 
 router.route('/:id')
+    .put(updateRecurringTransaction)
     .patch(toggleActive)
     .delete(deleteRecurringTransaction);
 

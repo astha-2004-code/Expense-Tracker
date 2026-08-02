@@ -1,5 +1,7 @@
 const Transaction = require('../models/Transaction');
-const { GoogleGenAI } = require('@google/genai');
+const Goal = require('../models/Goal');
+const RecurringTransaction = require('../models/RecurringTransaction');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const generateRuleBasedInsights = (transactions) => {
     const insights = [];
@@ -75,69 +77,123 @@ const generateRuleBasedInsights = (transactions) => {
         }
     }
 
-    if (insights.length === 0) {
-        insights.push({ type: 'success', message: 'Your finances are looking stable this month!' });
-    }
-
-    return insights;
+    return {
+        summary: "Standard Rule-Based Summary",
+        overspending: insights.find(i => i.type === 'warning')?.message || "No overspending detected.",
+        tips: insights.filter(i => i.type === 'recommendation' || i.type === 'info').map(i => i.message),
+        prediction: insights.find(i => i.type === 'prediction')?.message || "Insufficient data for next month's prediction.",
+        riskLevel: insights.some(i => i.type === 'warning') ? "High" : "Low"
+    };
 };
 
 exports.generateRuleBasedInsights = async (userId) => {
     try {
-        const transactions = await Transaction.findByUserId(userId);
+        const transactions = await Transaction.findAllByUser(userId);
         if (!transactions || transactions.length === 0) {
-            return [{ type: 'info', message: 'Not enough data to generate insights. Add more transactions!' }];
+            return {
+                summary: "Not enough data to generate insights. Add more transactions!",
+                overspending: "None",
+                tips: ["Start logging your daily expenses to get AI-powered insights."],
+                prediction: "N/A",
+                riskLevel: "Low"
+            };
         }
 
         if (process.env.GEMINI_API_KEY) {
             try {
-                const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+                const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
                 
-                // Prepare a simplified summary of transactions for the LLM
-                // We only want the last 30-60 days to keep the prompt small
+                // Prepare additional context
+                const goals = await Goal.findByUserId(userId) || [];
+                const recurring = await RecurringTransaction.findByUserId(userId) || [];
+
                 const recentTransactions = transactions.slice(0, 50).map(t => ({
-                    date: t.date.split('T')[0],
+                    date: t.date ? new Date(t.date).toISOString().split('T')[0] : 'Unknown',
                     type: t.type,
                     amount: t.amount,
                     category: t.category_name
                 }));
 
+                const activeGoals = goals.map(g => ({
+                    name: g.goal_name,
+                    target: g.target_amount,
+                    saved: g.saved_amount
+                }));
+
+                const activeRecurring = recurring.map(r => ({
+                    type: r.type,
+                    amount: r.amount,
+                    frequency: r.frequency
+                }));
+
                 const prompt = `
-You are a friendly personal finance AI assistant. Analyze the user's recent transactions and provide exactly 3 concise insights (e.g. overspending, positive reinforcement, prediction, or category breakdown).
+You are a friendly personal finance AI assistant. Analyze the user's finances and provide insights.
 Rules:
-1. Return ONLY a valid JSON array of objects. Do not include markdown codeblocks (like \`\`\`json) or any other text.
-2. Each object must have exactly two keys: "type" and "message".
-3. "type" must be one of: "info", "warning", "success", "prediction", "recommendation".
-4. "message" must be a short string (under 100 characters).
+1. Return ONLY a valid JSON object. Do not include markdown codeblocks (like \`\`\`json).
+2. The JSON object must strictly match this format:
+{
+  "summary": "A 1-2 sentence overview of their financial health.",
+  "overspending": "Note any concerning spending trends, or say 'No overspending detected'.",
+  "tips": ["Tip 1", "Tip 2"],
+  "prediction": "Estimate next month's spending based on their habits and recurring bills.",
+  "riskLevel": "Low", "Medium", or "High"
+}
+
+Data:
 Transactions: ${JSON.stringify(recentTransactions)}
+Savings Goals: ${JSON.stringify(activeGoals)}
+Recurring Bills: ${JSON.stringify(activeRecurring)}
                 `;
 
-                const response = await ai.models.generateContent({
-                    model: 'gemini-2.5-flash',
-                    contents: prompt
-                });
+                const result = await model.generateContent(prompt);
+                const responseText = result.response.text();
                 
-                const responseText = response.text || response.candidates?.[0]?.content?.parts?.[0]?.text;
                 if (responseText) {
                     let cleanJson = responseText.trim();
-                    if (cleanJson.startsWith('\`\`\`json')) {
+                    if (cleanJson.startsWith('```json')) {
                         cleanJson = cleanJson.replace(/^\`\`\`json/m, '').replace(/\`\`\`$/m, '').trim();
+                    } else if (cleanJson.startsWith('```')) {
+                        cleanJson = cleanJson.replace(/^\`\`\`/m, '').replace(/\`\`\`$/m, '').trim();
                     }
                     const llmInsights = JSON.parse(cleanJson);
-                    if (Array.isArray(llmInsights) && llmInsights.length > 0) {
+                    if (llmInsights && llmInsights.summary) {
                         return llmInsights;
                     }
                 }
             } catch (llmError) {
-                console.error("Gemini API Error, falling back to rules:", llmError);
+                console.error("Gemini API Error details:", llmError);
+                
+                let errorMessage = "Gemini service unavailable";
+                if (llmError.status === 400 || (llmError.message && llmError.message.includes("API key not valid"))) {
+                    errorMessage = "Invalid Gemini API key";
+                } else if (llmError.status === 429 || (llmError.message && llmError.message.includes("quota"))) {
+                    errorMessage = "API quota exceeded";
+                } else if (llmError.status === 404 || (llmError.message && llmError.message.includes("not found"))) {
+                    errorMessage = "Model not found";
+                } else if (llmError.message && llmError.message.includes("fetch")) {
+                    errorMessage = "Network timeout or connection issue";
+                }
+                
+                // Fallback to rules if API fails, but inform user
+                const fallbackInsights = generateRuleBasedInsights(transactions);
+                fallbackInsights.error = errorMessage; // Add error to root of JSON
+                return fallbackInsights;
             }
         }
 
-        // Fallback to rules if API fails or no key
+        // Fallback to rules if no API key is provided
         return generateRuleBasedInsights(transactions);
 
     } catch (error) {
-        console.error('Error generating insights:', error);
-        return [{ type: 'error', message: 'Failed to generate insights.' }];
+        console.error('Error generating insights:', error.message, error.stack);
+        return { 
+            error: "Failed to generate insights.",
+            summary: "Error loading insights.",
+            overspending: "N/A",
+            tips: [],
+            prediction: "N/A",
+            riskLevel: "Unknown"
+        };
     }
 };

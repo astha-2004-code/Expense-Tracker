@@ -4,6 +4,7 @@ const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
+router.get('/test/gemini', require('../controllers/insightController').testGemini);
 router.get('/', protect, getInsights);
 
 module.exports = router;

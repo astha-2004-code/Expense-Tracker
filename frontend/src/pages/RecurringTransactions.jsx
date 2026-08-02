@@ -14,6 +14,7 @@ const RecurringTransactions = () => {
     
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({
+        id: '',
         category_id: '',
         type: 'expense',
         amount: '',
@@ -54,17 +55,38 @@ const RecurringTransactions = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await apiCall('/api/recurring', {
-                method: 'POST',
-                body: JSON.stringify(formData)
-            });
-            showToast('Recurring transaction created');
+            if (formData.id) {
+                await apiCall(`/api/recurring/${formData.id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(formData)
+                });
+                showToast('Recurring transaction updated');
+            } else {
+                await apiCall('/api/recurring', {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                });
+                showToast('Recurring transaction created');
+            }
             setIsModalOpen(false);
-            setFormData(prev => ({ ...prev, amount: '', description: '', next_execution: '' }));
+            setFormData(prev => ({ ...prev, id: '', amount: '', description: '', next_execution: '' }));
             fetchRecurring();
         } catch (error) {
-            showToast('Failed to create recurring transaction', 'error');
+            showToast('Failed to save recurring transaction', 'error');
         }
+    };
+
+    const handleEdit = (t) => {
+        setFormData({
+            id: t.id,
+            category_id: t.category_id,
+            type: t.type,
+            amount: t.amount,
+            description: t.description || '',
+            frequency: t.frequency,
+            next_execution: t.next_execution.split('T')[0]
+        });
+        setIsModalOpen(true);
     };
 
     const toggleActive = async (id, currentStatus) => {
@@ -103,7 +125,7 @@ const RecurringTransactions = () => {
                         <h2>Recurring Transactions</h2>
                         <p>Manage your subscriptions, bills, and automated incomes.</p>
                     </div>
-                    <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
+                    <button className="btn btn-primary" onClick={() => { setFormData({ id: '', category_id: categories.find(c => c.type === 'expense')?.id || '', type: 'expense', amount: '', description: '', frequency: 'monthly', next_execution: '' }); setIsModalOpen(true); }}>
                         <i className="fas fa-plus"></i> Add New
                     </button>
                 </header>
@@ -147,6 +169,7 @@ const RecurringTransactions = () => {
                                                 </button>
                                             </td>
                                             <td className="action-btns">
+                                                <button className="edit-btn" onClick={() => handleEdit(t)}><i className="fas fa-edit"></i></button>
                                                 <button className="delete-btn" onClick={() => handleDelete(t.id)}><i className="fas fa-trash"></i></button>
                                             </td>
                                         </tr>
@@ -159,10 +182,10 @@ const RecurringTransactions = () => {
             </main>
 
             {isModalOpen && (
-                <div className="modal-overlay">
+                <div className="modal-overlay active">
                     <div className="modal">
                         <div className="modal-header">
-                            <h2>Add Recurring Transaction</h2>
+                            <h2>{formData.id ? 'Edit Recurring Transaction' : 'Add Recurring Transaction'}</h2>
                             <button className="close-btn" onClick={() => setIsModalOpen(false)}>&times;</button>
                         </div>
                         <form onSubmit={handleSubmit} className="modal-body">

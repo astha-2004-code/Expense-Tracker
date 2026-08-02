@@ -15,6 +15,7 @@ const SavingsGoals = () => {
     
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({
+        id: '',
         goal_name: '',
         target_amount: '',
         deadline: '',
@@ -43,17 +44,36 @@ const SavingsGoals = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await apiCall('/api/goals', {
-                method: 'POST',
-                body: JSON.stringify(formData)
-            });
-            showToast('Goal created successfully');
+            if (formData.id) {
+                await apiCall(`/api/goals/${formData.id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(formData)
+                });
+                showToast('Goal updated successfully');
+            } else {
+                await apiCall('/api/goals', {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                });
+                showToast('Goal created successfully');
+            }
             setIsModalOpen(false);
-            setFormData({ goal_name: '', target_amount: '', deadline: '', description: '' });
+            setFormData({ id: '', goal_name: '', target_amount: '', deadline: '', description: '' });
             fetchGoals();
         } catch (error) {
-            showToast('Failed to create goal', 'error');
+            showToast('Failed to save goal', 'error');
         }
+    };
+
+    const handleEdit = (goal) => {
+        setFormData({
+            id: goal.id,
+            goal_name: goal.goal_name,
+            target_amount: goal.target_amount,
+            deadline: goal.deadline ? goal.deadline.split('T')[0] : '',
+            description: goal.description || ''
+        });
+        setIsModalOpen(true);
     };
 
     const handleAddFunds = async (e) => {
@@ -61,7 +81,7 @@ const SavingsGoals = () => {
         try {
             const newTotal = Number(selectedGoal.saved_amount) + Number(addAmount);
             await apiCall(`/api/goals/${selectedGoal.id}`, {
-                method: 'PUT',
+                method: 'PATCH',
                 body: JSON.stringify({ saved_amount: newTotal })
             });
             
@@ -102,7 +122,7 @@ const SavingsGoals = () => {
                         <h2>Savings Goals</h2>
                         <p>Track your financial targets and celebrate when you reach them.</p>
                     </div>
-                    <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
+                    <button className="btn btn-primary" onClick={() => { setFormData({ id: '', goal_name: '', target_amount: '', deadline: '', description: '' }); setIsModalOpen(true); }}>
                         <i className="fas fa-plus"></i> New Goal
                     </button>
                 </header>
@@ -116,9 +136,14 @@ const SavingsGoals = () => {
                             <div key={goal.id} className="card goal-card" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>{goal.goal_name}</h3>
-                                    <button className="delete-btn" onClick={() => handleDelete(goal.id)} style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer' }}>
-                                        <i className="fas fa-trash"></i>
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <button className="edit-btn" onClick={() => handleEdit(goal)} style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer' }}>
+                                            <i className="fas fa-edit"></i>
+                                        </button>
+                                        <button className="delete-btn" onClick={() => handleDelete(goal.id)} style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer' }}>
+                                            <i className="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </div>
                                 
                                 <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{goal.description}</p>
@@ -154,10 +179,10 @@ const SavingsGoals = () => {
 
             {/* Create Goal Modal */}
             {isModalOpen && (
-                <div className="modal-overlay">
+                <div className="modal-overlay active">
                     <div className="modal">
                         <div className="modal-header">
-                            <h2>Create Savings Goal</h2>
+                            <h2>{formData.id ? 'Edit Savings Goal' : 'Create Savings Goal'}</h2>
                             <button className="close-btn" onClick={() => setIsModalOpen(false)}>&times;</button>
                         </div>
                         <form onSubmit={handleSubmit} className="modal-body">
@@ -188,7 +213,7 @@ const SavingsGoals = () => {
 
             {/* Add Funds Modal */}
             {isAddFundsOpen && (
-                <div className="modal-overlay">
+                <div className="modal-overlay active">
                     <div className="modal" style={{ maxWidth: '400px' }}>
                         <div className="modal-header">
                             <h2>Add Funds to {selectedGoal?.goal_name}</h2>

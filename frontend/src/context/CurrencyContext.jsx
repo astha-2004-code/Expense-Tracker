@@ -30,7 +30,7 @@ export const CurrencyProvider = ({ children }) => {
             setCurrency(newCurrency); // Optimistic UI update
             
             // Save to backend
-            await apiCall('/api/auth/profile', {
+            await apiCall('/api/auth/currency', {
                 method: 'PUT',
                 body: JSON.stringify({ preferred_currency: newCurrency })
             });
