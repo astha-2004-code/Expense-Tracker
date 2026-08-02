@@ -98,7 +98,7 @@ const Profile = () => {
                         <h3 style={{ marginBottom: '20px' }}>Monthly Budget</h3>
                         <form onSubmit={handleBudgetSubmit} style={{ width: '100%' }}>
                             <div className="form-group">
-                                <label>Set Monthly Expense Budget ($)</label>
+                                <label>Set Monthly Expense Budget (₹)</label>
                                 <input 
                                     type="number" 
                                     className="form-control" 

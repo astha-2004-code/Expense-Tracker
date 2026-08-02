@@ -6,10 +6,28 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Request Logging Middleware
+app.use((req, res, next) => {
+    console.log(`[Incoming Request] ${req.method} ${req.url} - Origin: ${req.headers.origin || 'No Origin'}`);
+    next();
+});
+
 // Middleware
+const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    'http://localhost:5173',
+    'http://127.0.0.1:5173'
+].filter(Boolean);
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL, 
-    credentials: true 
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -40,7 +58,7 @@ const db = require('./config/db');
 // Start Server
 const startServer = async () => {
     await db.initializeDatabase();
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
         console.log(`Server running on port ${PORT}`);
     });
 };

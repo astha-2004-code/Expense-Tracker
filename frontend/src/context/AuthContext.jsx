@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useContext } from 'react';
+import { createContext, useState, useEffect, useContext, useCallback } from 'react';
 
 const AuthContext = createContext();
 
@@ -21,33 +21,34 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
     }, []);
 
-    const showToast = (message, type = 'success') => {
+    const showToast = useCallback((message, type = 'success') => {
         setToast({ show: true, message, type });
         setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
-    };
+    }, []);
 
-    const login = (userData, token) => {
+    const login = useCallback((userData, token) => {
         setUser(userData);
         localStorage.setItem('user', JSON.stringify(userData));
         localStorage.setItem('token', token);
-    };
+    }, []);
 
-    const logout = () => {
+    const logout = useCallback(() => {
         setUser(null);
         localStorage.removeItem('user');
         localStorage.removeItem('token');
         fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`).catch(() => {});
-    };
+    }, []);
 
-    const updateBudget = (budget) => {
-        if (user) {
-            const updatedUser = { ...user, monthly_budget: budget };
-            setUser(updatedUser);
+    const updateBudget = useCallback((budget) => {
+        setUser(prevUser => {
+            if (!prevUser) return prevUser;
+            const updatedUser = { ...prevUser, monthly_budget: budget };
             localStorage.setItem('user', JSON.stringify(updatedUser));
-        }
-    };
+            return updatedUser;
+        });
+    }, []);
 
-    const apiCall = async (endpoint, options = {}) => {
+    const apiCall = useCallback(async (endpoint, options = {}) => {
         const token = localStorage.getItem('token');
         const headers = {
             'Content-Type': 'application/json',
@@ -61,7 +62,7 @@ export const AuthProvider = ({ children }) => {
             
             if (!response.ok) {
                 if (response.status === 401 && endpoint !== '/api/auth/login') {
-                    logout(); // Auto logout on unauthorized
+                    logout();
                 }
                 throw new Error(data.message || 'Something went wrong');
             }
@@ -70,7 +71,7 @@ export const AuthProvider = ({ children }) => {
             showToast(error.message, 'error');
             throw error;
         }
-    };
+    }, [logout, showToast]);
 
     return (
         <AuthContext.Provider value={{ user, login, logout, apiCall, showToast, toast, updateBudget }}>
