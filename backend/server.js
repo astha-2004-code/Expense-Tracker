@@ -10,9 +10,10 @@ if (process.env.GEMINI_API_KEY) {
 }
 
 if (!process.env.GEMINI_API_KEY) {
-    console.error("Missing GEMINI_API_KEY. Stopping server.");
-    process.exit(1);
+    console.warn("⚠️ Warning: Missing GEMINI_API_KEY. AI insights will fall back to standard rules. Server will continue starting.");
 }
+
+console.log("[Startup] Step 1: Environment Variables Checked.");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -49,7 +50,7 @@ app.use(cors({
 }));
 
 // Explicitly handle OPTIONS requests for preflight
-app.options('*', cors());
+// (Removed app.options('*', cors()) as it crashes on newer Express versions with path-to-regexp error)
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -90,14 +91,23 @@ const db = require('./config/db');
 
 // Start Server
 const startServer = async () => {
-    await db.initializeDatabase();
-    
-    // Start recurring transaction background job
-    startScheduler();
-    
-    app.listen(PORT, '0.0.0.0', () => {
-        console.log(`Server running on port ${PORT}`);
-    });
+    try {
+        console.log("[Startup] Step 2: Initializing Database...");
+        await db.initializeDatabase();
+        console.log("[Startup] Step 2: Database Initialized.");
+        
+        console.log("[Startup] Step 3: Starting Scheduler...");
+        startScheduler();
+        console.log("[Startup] Step 3: Scheduler Started.");
+        
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`[Startup] Step 4: Server Successfully Running on port ${PORT}`);
+        });
+    } catch (error) {
+        console.error("[Startup Error] FATAL ERROR during server initialization:");
+        console.error(error.stack || error);
+        process.exit(1);
+    }
 };
 
 startServer();
