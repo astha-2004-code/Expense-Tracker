@@ -4,17 +4,13 @@ const path = require('path');
 require('dotenv').config();
 
 const pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT || 4000,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
+    uri: process.env.DATABASE_URL,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
     multipleStatements: true,
     ssl: {
-        rejectUnauthorized: true
+        rejectUnauthorized: false
     }
 });
 
@@ -35,7 +31,7 @@ promisePool.initializeDatabase = async () => {
 // Test the connection
 promisePool.getConnection()
     .then(connection => {
-        console.log('Successfully connected to TiDB Cloud.');
+        console.log('Successfully connected to the Database.');
         connection.release();
     })
     .catch(err => {

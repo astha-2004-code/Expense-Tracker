@@ -16,6 +16,7 @@ const setTokenCookie = (res, token) => {
     };
     if (process.env.NODE_ENV === 'production') {
         options.secure = true;
+        options.sameSite = 'none';
     }
     res.cookie('token', token, options);
 };
@@ -88,10 +89,15 @@ exports.login = async (req, res, next) => {
 };
 
 exports.logout = (req, res) => {
-    res.cookie('token', 'none', {
+    const options = {
         expires: new Date(Date.now() + 10 * 1000),
         httpOnly: true
-    });
+    };
+    if (process.env.NODE_ENV === 'production') {
+        options.secure = true;
+        options.sameSite = 'none';
+    }
+    res.cookie('token', 'none', options);
     res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
 

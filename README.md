@@ -30,7 +30,7 @@ A modern, responsive, full-stack Expense Tracker application. The project is dec
    npm install
    npm start
    ```
-   The backend will run on `http://localhost:3000`.
+   The backend will run on the port specified in your `.env` file (e.g., `PORT=3000`).
 
 ### 3. Frontend Setup
 
@@ -43,7 +43,11 @@ A modern, responsive, full-stack Expense Tracker application. The project is dec
    npm install
    npm run dev
    ```
-3. Open your browser and navigate to the URL provided by Vite (usually `http://localhost:5173`).
+3. Open your browser and navigate to the URL provided by Vite.
+
+## Deployment
+
+Please refer to the [Deployment Guide](deployment_guide.md) for step-by-step instructions on deploying the application to Vercel (Frontend) and Render (Backend) with an Aiven MySQL database.
 
 ## Features
 
